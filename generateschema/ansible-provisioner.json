@@ -1,0 +1,453 @@
+{
+  "name": "ansible",
+  "type": "provisioner",
+  "version": "v2.3.0-dev",
+  "schema": {
+    "ansible_ssh_settings": {
+      "Type": "TypeSet",
+      "Optional": true,
+      "Default": {},
+      "Elem": {
+        "Type": "SchemaInfo",
+        "Info": {
+          "bastion_user_known_hosts_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "connect_timeout_seconds": {
+            "Type": "TypeInt",
+            "Optional": true,
+            "Default": {
+              "Type": "int",
+              "Value": "10"
+            },
+            "Elem": {}
+          },
+          "connection_attempts": {
+            "Type": "TypeInt",
+            "Optional": true,
+            "Default": {
+              "Type": "int",
+              "Value": "10"
+            },
+            "Elem": {}
+          },
+          "insecure_bastion_no_strict_host_key_checking": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "insecure_no_strict_host_key_checking": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "ssh_keyscan_timeout": {
+            "Type": "TypeInt",
+            "Optional": true,
+            "Default": {
+              "Type": "int",
+              "Value": "60"
+            },
+            "Elem": {}
+          },
+          "user_known_hosts_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          }
+        }
+      }
+    },
+    "defaults": {
+      "Type": "TypeSet",
+      "Optional": true,
+      "Default": {},
+      "Elem": {
+        "Type": "SchemaInfo",
+        "Info": {
+          "become_method": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "become_user": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "extra_vars": {
+            "Type": "TypeMap",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "extra_vars_json": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "forks": {
+            "Type": "TypeInt",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "groups": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "hosts": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "inventory_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "limit": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "vault_id": {
+            "Type": "TypeList",
+            "Optional": true,
+            "ConflictsWith": [
+              "defaults.vault_password_file"
+            ],
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "vault_password_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "ConflictsWith": [
+              "defaults.vault_id"
+            ],
+            "Default": {},
+            "Elem": {}
+          }
+        }
+      }
+    },
+    "plays": {
+      "Type": "TypeList",
+      "Optional": true,
+      "Computed": true,
+      "Default": {},
+      "Elem": {
+        "Type": "SchemaInfo",
+        "Info": {
+          "become": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "become_method": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "become_user": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "check": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "diff": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "enabled": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "extra_vars": {
+            "Type": "TypeMap",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "extra_vars_json": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "forks": {
+            "Type": "TypeInt",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "groups": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "hosts": {
+            "Type": "TypeList",
+            "Optional": true,
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "inventory_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "limit": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "module": {
+            "Type": "TypeSet",
+            "Optional": true,
+            "ConflictsWith": [
+              "plays.playbook"
+            ],
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaInfo",
+              "Info": {
+                "args": {
+                  "Type": "TypeMap",
+                  "Optional": true,
+                  "Computed": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "background": {
+                  "Type": "TypeInt",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "host_pattern": {
+                  "Type": "TypeString",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "module": {
+                  "Type": "TypeString",
+                  "Required": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "one_line": {
+                  "Type": "TypeBool",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "poll": {
+                  "Type": "TypeInt",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                }
+              }
+            }
+          },
+          "playbook": {
+            "Type": "TypeSet",
+            "Optional": true,
+            "ConflictsWith": [
+              "plays.module"
+            ],
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaInfo",
+              "Info": {
+                "file_path": {
+                  "Type": "TypeString",
+                  "Required": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "force_handlers": {
+                  "Type": "TypeBool",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "roles_path": {
+                  "Type": "TypeList",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {
+                    "Type": "SchemaElements",
+                    "ElementsType": "TypeString"
+                  }
+                },
+                "skip_tags": {
+                  "Type": "TypeList",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {
+                    "Type": "SchemaElements",
+                    "ElementsType": "TypeString"
+                  }
+                },
+                "start_at_task": {
+                  "Type": "TypeString",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {}
+                },
+                "tags": {
+                  "Type": "TypeList",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {
+                    "Type": "SchemaElements",
+                    "ElementsType": "TypeString"
+                  }
+                }
+              }
+            }
+          },
+          "vault_id": {
+            "Type": "TypeList",
+            "Optional": true,
+            "ConflictsWith": [
+              "plays.vault_password_file"
+            ],
+            "Default": {},
+            "Elem": {
+              "Type": "SchemaElements",
+              "ElementsType": "TypeString"
+            }
+          },
+          "vault_password_file": {
+            "Type": "TypeString",
+            "Optional": true,
+            "ConflictsWith": [
+              "plays.vault_id"
+            ],
+            "Default": {},
+            "Elem": {}
+          },
+          "verbose": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          }
+        }
+      }
+    },
+    "remote": {
+      "Type": "TypeSet",
+      "Optional": true,
+      "Default": {},
+      "Elem": {
+        "Type": "SchemaInfo",
+        "Info": {
+          "bootstrap_directory": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "install_version": {
+            "Type": "TypeString",
+            "Optional": true,
+            "ConflictsWith": [
+              "remote.local_installer_path"
+            ],
+            "Default": {},
+            "Elem": {}
+          },
+          "local_installer_path": {
+            "Type": "TypeString",
+            "Optional": true,
+            "ConflictsWith": [
+              "remote.install_version"
+            ],
+            "Default": {},
+            "Elem": {}
+          },
+          "remote_installer_directory": {
+            "Type": "TypeString",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "skip_cleanup": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "skip_install": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          },
+          "use_sudo": {
+            "Type": "TypeBool",
+            "Optional": true,
+            "Default": {},
+            "Elem": {}
+          }
+        }
+      }
+    }
+  }
+}
