@@ -22,7 +22,7 @@ type Play struct {
 	becomeUser                string
 	diff                      bool
 	check                     bool
-	extraVars                 map[string]interface{}
+	extraVars                 []map[string]interface{}
 	forks                     int
 	inventoryFile             string
 	limit                     string
@@ -56,6 +56,7 @@ const (
 	playAttributeDiff              = "diff"
 	playAttributeCheck             = "check"
 	playAttributeExtraVars         = "extra_vars"
+	playAttributeExtraVarsJSON     = "extra_vars_json"
 	playAttributeForks             = "forks"
 	playAttributeInventoryFile     = "inventory_file"
 	playAttributeLimit             = "limit"
@@ -115,7 +116,11 @@ func NewPlaySchema() *schema.Schema {
 				playAttributeExtraVars: &schema.Schema{
 					Type:     schema.TypeMap,
 					Optional: true,
-					Computed: true,
+				},
+				playAttributeExtraVarsJSON: &schema.Schema{
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
 				},
 				playAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
@@ -168,7 +173,7 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) *P
 		becomeUser:        vals[playAttributeBecomeUser].(string),
 		diff:              vals[playAttributeDiff].(bool),
 		check:             vals[playAttributeCheck].(bool),
-		extraVars:         mapFromTypeMap(vals[playAttributeExtraVars]),
+		extraVars:         listOfMapFromTypeMap(vals[playAttributeExtraVars]),
 		forks:             vals[playAttributeForks].(int),
 		inventoryFile:     vals[playAttributeInventoryFile].(string),
 		limit:             vals[playAttributeLimit].(string),
@@ -192,6 +197,9 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) *P
 		v.groups = listOfInterfaceToListOfString(val.([]interface{}))
 	}
 
+	if val, ok := vals[playAttributeExtraVarsJSON]; ok {
+		v.extraVars = append(v.extraVars, listOfStringToListOfMap(val.([]interface{}))...)
+	}
 	return v
 }
 
@@ -266,14 +274,14 @@ func (v *Play) Check() bool {
 }
 
 // ExtraVars represents Ansible --extra-vars flag.
-func (v *Play) ExtraVars() map[string]interface{} {
+func (v *Play) ExtraVars() []map[string]interface{} {
 	if len(v.extraVars) > 0 {
 		return v.extraVars
 	}
 	if v.defaults.extraVarsIsSet {
 		return v.defaults.extraVars
 	}
-	return make(map[string]interface{})
+	return make([]map[string]interface{}, 0)
 }
 
 // Forks represents Ansible --forks flag.
@@ -469,13 +477,16 @@ func (v *Play) ToCommand(ansibleArgs LocalModeAnsibleArgs) (string, error) {
 		command = fmt.Sprintf("%s --check", command)
 	}
 	// extra vars:
-	if len(v.ExtraVars()) > 0 {
-		extraVars, err := json.Marshal(v.ExtraVars())
-		if err != nil {
-			return "", err
+	for _, ev := range v.ExtraVars() {
+		if len(ev) > 0 {
+			extraVars, err := json.Marshal(ev)
+			if err != nil {
+				return "", err
+			}
+			command = fmt.Sprintf("%s --extra-vars='%s'", command, string(extraVars))
 		}
-		command = fmt.Sprintf("%s --extra-vars='%s'", command, string(extraVars))
 	}
+
 	// forks:
 	if v.Forks() > 0 {
 		command = fmt.Sprintf("%s --forks=%d", command, v.Forks())
