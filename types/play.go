@@ -56,6 +56,7 @@ const (
 	playAttributeDiff              = "diff"
 	playAttributeCheck             = "check"
 	playAttributeExtraVars         = "extra_vars"
+	playAttributeExtraVarsJSON     = "extra_vars_json"
 	playAttributeForks             = "forks"
 	playAttributeInventoryFile     = "inventory_file"
 	playAttributeLimit             = "limit"
@@ -113,9 +114,14 @@ func NewPlaySchema() *schema.Schema {
 					Optional: true,
 				},
 				playAttributeExtraVars: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-					Computed: true,
+					Type:          schema.TypeMap,
+					Optional:      true,
+					ConflictsWith: []string{"plays." + playAttributeExtraVarsJSON},
+				},
+				playAttributeExtraVarsJSON: &schema.Schema{
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"plays." + playAttributeExtraVars},
 				},
 				playAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
@@ -192,6 +198,9 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) *P
 		v.groups = listOfInterfaceToListOfString(val.([]interface{}))
 	}
 
+	if val, ok := vals[playAttributeExtraVarsJSON]; ok && len(val.(string)) > 0 {
+		v.extraVars = stringToTypeMap(val.(string), playAttributeExtraVarsJSON)
+	}
 	return v
 }
 
