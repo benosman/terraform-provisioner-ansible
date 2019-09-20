@@ -3,12 +3,11 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 )
 
 var (
@@ -133,18 +132,22 @@ func ResolveDirectory(path string) (string, error) {
 	return "", fmt.Errorf("Ansible module not found at path: [%s]", path)
 }
 
-func stringToTypeMap(block string) map[string]interface{} {
+func stringToTypeMap(block string, label string) (map[string]interface{}, error) {
 	var m map[string]interface{}
 	if err := json.Unmarshal([]byte(block), &m); err != nil {
-		log.Fatalf("%s: %s", playAttributeExtraVarsJSON, err.Error())
+		return nil, fmt.Errorf("%s: %s", label, err.Error())
 	}
-	return m
+	return m, nil
 }
 
-func listOfStringToListOfMap(blocks []interface{}) []map[string]interface{} {
-	output := make([]map[string]interface{}, 0)
-	for _, block := range blocks {
-		output = append(output, stringToTypeMap(block.(string)))
+func listOfStringToListOfMap(blocks []string, label string) (output []map[string]interface{}, errs []error) {
+	output = make([]map[string]interface{}, 0)
+	for i, block := range blocks {
+		_map, err := stringToTypeMap(block, fmt.Sprintf("%s[%d]", label, i));
+		if err != nil {
+			errs = append(errs, err)
+		}
+		output = append(output, _map)
 	}
-	return output
+	return output, errs
 }

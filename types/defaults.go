@@ -11,6 +11,7 @@ type Defaults struct {
 	becomeMethod      string
 	becomeUser        string
 	extraVars         []map[string]interface{}
+	extraVarsJSON	  []string
 	forks             int
 	inventoryFile     string
 	limit             string
@@ -22,6 +23,7 @@ type Defaults struct {
 	becomeMethodIsSet      bool
 	becomeUserIsSet        bool
 	extraVarsIsSet         bool
+	extraVarsJSONIsSet     bool
 	forksIsSet             bool
 	inventoryFileIsSet     bool
 	limitIsSet             bool
@@ -140,11 +142,12 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) *Defaults
 		}
 		if val, ok := vals[defaultsAttributeExtraVars]; ok && len(val.(map[string]interface{})) > 0 {
 			v.extraVars = append(v.extraVars, mapFromTypeMap(val))
+			v.extraVarsIsSet = len(v.extraVars) > 0
 		}
 		if val, ok := vals[defaultsAttributeExtraVarsJSON]; ok && len(val.([]interface{})) > 0 {
-			v.extraVars = append(v.extraVars, listOfStringToListOfMap(val.([]interface{}))...)
+			v.extraVarsJSON = listOfInterfaceToListOfString(val.([]interface{}))
+			v.extraVarsJSONIsSet = len(v.extraVarsJSON) > 0
 		}
-		v.extraVarsIsSet = len(v.extraVars) > 0
 		if val, ok := vals[defaultsAttributeForks]; ok {
 			v.forks = val.(int)
 			v.forksIsSet = v.forks > 0

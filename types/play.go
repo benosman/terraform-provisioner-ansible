@@ -23,6 +23,7 @@ type Play struct {
 	diff                      bool
 	check                     bool
 	extraVars                 []map[string]interface{}
+	extraVarsJSON             []string
 	forks                     int
 	inventoryFile             string
 	limit                     string
@@ -174,6 +175,7 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) *P
 		diff:              vals[playAttributeDiff].(bool),
 		check:             vals[playAttributeCheck].(bool),
 		extraVars:         listOfMapFromTypeMap(vals[playAttributeExtraVars]),
+		extraVarsJSON:	   listOfInterfaceToListOfString(vals[playAttributeExtraVarsJSON].([]interface{})),
 		forks:             vals[playAttributeForks].(int),
 		inventoryFile:     vals[playAttributeInventoryFile].(string),
 		limit:             vals[playAttributeLimit].(string),
@@ -195,10 +197,6 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) *P
 	}
 	if val, ok := vals[playAttributeGroups]; ok {
 		v.groups = listOfInterfaceToListOfString(val.([]interface{}))
-	}
-
-	if val, ok := vals[playAttributeExtraVarsJSON]; ok {
-		v.extraVars = append(v.extraVars, listOfStringToListOfMap(val.([]interface{}))...)
 	}
 	return v
 }
@@ -273,15 +271,37 @@ func (v *Play) Check() bool {
 	return v.check
 }
 
-// ExtraVars represents Ansible --extra-vars flag.
-func (v *Play) ExtraVars() []map[string]interface{} {
-	if len(v.extraVars) > 0 {
-		return v.extraVars
+// ExtraVars represents Ansible --extra-vars flags.
+func (v *Play) ExtraVars() ([]map[string]interface{}, error) {
+	allVars := make([]map[string]interface{}, 0)
+
+	if v.defaults.extraVarsJSONIsSet {
+		label := fmt.Sprintf("defaults.%s", defaultsAttributeExtraVarsJSON )
+		jsonVars, errs := listOfStringToListOfMap(v.defaults.extraVarsJSON, label)
+		if len(errs) > 0 {
+			return nil, errs[0]
+		}
+		allVars = append(v.extraVars, jsonVars...)
 	}
+
 	if v.defaults.extraVarsIsSet {
-		return v.defaults.extraVars
+		allVars = append(allVars, v.defaults.extraVars...)
 	}
-	return make([]map[string]interface{}, 0)
+
+	if len(v.extraVarsJSON) > 0 {
+		label := fmt.Sprintf("play.%s", playAttributeExtraVarsJSON )
+		jsonVars, errs := listOfStringToListOfMap(v.extraVarsJSON, label)
+		if len(errs) > 0 {
+			return nil, errs[0]
+		}
+		allVars = append(v.extraVars, jsonVars...)
+	}
+
+	if len(v.extraVars) > 0 {
+		allVars = append(allVars, v.extraVars...)
+	}
+
+	return allVars, nil
 }
 
 // Forks represents Ansible --forks flag.
@@ -476,8 +496,13 @@ func (v *Play) ToCommand(ansibleArgs LocalModeAnsibleArgs) (string, error) {
 	if v.Check() {
 		command = fmt.Sprintf("%s --check", command)
 	}
+
 	// extra vars:
-	for _, ev := range v.ExtraVars() {
+	extraVars, err := v.ExtraVars()
+	if err != nil {
+		return "", err
+	}
+	for _, ev := range extraVars {
 		if len(ev) > 0 {
 			extraVars, err := json.Marshal(ev)
 			if err != nil {
