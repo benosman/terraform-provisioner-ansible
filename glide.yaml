@@ -10,4 +10,5 @@ import:
 - package: github.com/mitchellh/go-homedir
 - package: github.com/satori/go.uuid
 - package: github.com/pkg/sftp
+- package: github.com/fredwangwang/orderedmap
   version: v1.10.0
