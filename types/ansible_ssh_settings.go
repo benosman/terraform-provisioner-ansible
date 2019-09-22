@@ -102,7 +102,7 @@ func NewAnsibleSSHSettingsSchema() *schema.Schema {
 }
 
 // NewAnsibleSSHSettingsFromInterface reads AnsibleSSHSettings configuration from Terraform schema.
-func NewAnsibleSSHSettingsFromInterface(i interface{}, ok bool) *AnsibleSSHSettings {
+func NewAnsibleSSHSettingsFromInterface(i interface{}, ok bool) (*AnsibleSSHSettings, error) {
 	v := &AnsibleSSHSettings{
 		connectTimeoutSeconds: ansibleSSHDefaultConnectTimeoutSeconds,
 		connectAttempts:       ansibleSSHDefaultConnectAttempts,
@@ -118,7 +118,7 @@ func NewAnsibleSSHSettingsFromInterface(i interface{}, ok bool) *AnsibleSSHSetti
 		v.userKnownHostsFile = vals[ansibleSSHAttributeUserKnownHostsFile].(string)
 		v.bastionUserKnownHostsFile = vals[ansibleSSHAttributeBastionUserKnownHostsFile].(string)
 	}
-	return v
+	return v, nil
 }
 
 // ConnectTimeoutSeconds reutrn Ansible process SSH connection timeout.

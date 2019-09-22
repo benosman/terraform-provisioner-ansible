@@ -125,17 +125,33 @@ func applyFn(ctx context.Context) error {
 
 func decodeConfig(d *schema.ResourceData) (*provisioner, error) {
 
-	vRemoteSettings := types.NewRemoteSettingsFromInterface(d.GetOk("remote"))
-	vAnsibleSSHSettings := types.NewAnsibleSSHSettingsFromInterface(d.GetOk("ansible_ssh_settings"))
-	vDefaults := types.NewDefaultsFromInterface(d.GetOk("defaults"))
+	vRemoteSettings, err := types.NewRemoteSettingsFromInterface(d.GetOk("remote"))
+	if err != nil {
+		return nil, err
+	}
+
+	vAnsibleSSHSettings, err := types.NewAnsibleSSHSettingsFromInterface(d.GetOk("ansible_ssh_settings"))
+	if err != nil {
+		return nil, err
+	}
+
+	vDefaults, err := types.NewDefaultsFromInterface(d.GetOk("defaults"))
+	if err != nil {
+		return nil, err
+	}
 
 	plays := make([]*types.Play, 0)
 	if rawPlays, ok := d.GetOk("plays"); ok {
 		playSchema := types.NewPlaySchema()
 		for _, iface := range rawPlays.([]interface{}) {
-			plays = append(plays, types.NewPlayFromInterface(schema.NewSet(schema.HashResource(playSchema.Elem.(*schema.Resource)), []interface{}{iface}), vDefaults))
+			play, err := types.NewPlayFromInterface(schema.NewSet(schema.HashResource(playSchema.Elem.(*schema.Resource)), []interface{}{iface}), vDefaults)
+			if err != nil {
+				return nil, err
+			}
+			plays = append(plays, play)
 		}
 	}
+
 	return &provisioner{
 		defaults:           vDefaults,
 		remote:             vRemoteSettings,

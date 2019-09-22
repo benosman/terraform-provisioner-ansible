@@ -83,18 +83,18 @@ func NewRemoteSchema() *schema.Schema {
 }
 
 // NewRemoteSettingsFromInterface reads Remote configuration from Terraform schema.
-func NewRemoteSettingsFromInterface(i interface{}, ok bool) *RemoteSettings {
+func NewRemoteSettingsFromInterface(i interface{}, ok bool) (*RemoteSettings, error) {
 	if ok {
 		return NewRemoteSettingsFromMapInterface(mapFromTypeSetList(i.(*schema.Set).List()), ok)
 	}
 	return &RemoteSettings{
 		isRemoteInUse: false,
 		useSudo:       remoteDefaultUseSudo,
-	}
+	}, nil
 }
 
 // NewRemoteSettingsFromMapInterface reads Remote configuration from a map.
-func NewRemoteSettingsFromMapInterface(vals map[string]interface{}, ok bool) *RemoteSettings {
+func NewRemoteSettingsFromMapInterface(vals map[string]interface{}, ok bool) (*RemoteSettings, error) {
 	v := &RemoteSettings{
 		isRemoteInUse: false,
 		useSudo:       remoteDefaultUseSudo,
@@ -109,7 +109,7 @@ func NewRemoteSettingsFromMapInterface(vals map[string]interface{}, ok bool) *Re
 		v.remoteInstallerDirectory = vals[remoteAttributeRemoteInstallerDirectory].(string)
 		v.bootstrapDirectory = vals[remoteAttributeBootstrapDirectory].(string)
 	}
-	return v
+	return v, nil
 }
 
 // IsRemoteInUse returns true remote provisioning is in use.
