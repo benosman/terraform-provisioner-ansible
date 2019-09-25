@@ -143,8 +143,8 @@ func decodeConfig(d *schema.ResourceData) (*provisioner, error) {
 	plays := make([]*types.Play, 0)
 	if rawPlays, ok := d.GetOk("plays"); ok {
 		playSchema := types.NewPlaySchema()
-		for _, iface := range rawPlays.([]interface{}) {
-			play, err := types.NewPlayFromInterface(schema.NewSet(schema.HashResource(playSchema.Elem.(*schema.Resource)), []interface{}{iface}), vDefaults)
+		for index, iface := range rawPlays.([]interface{}) {
+			play, err := types.NewPlayFromInterface(schema.NewSet(schema.HashResource(playSchema.Elem.(*schema.Resource)), []interface{}{iface}), vDefaults, fmt.Sprintf("plays[%d]", index))
 			if err != nil {
 				return nil, err
 			}

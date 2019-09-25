@@ -4,10 +4,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+
 // Defaults represents default settings for each consequent play.
 type Defaults struct {
 	hosts             []string
 	groups            []string
+	inventory         InventoryRoot
 	becomeMethod      string
 	becomeUser        string
 	extraVars         []map[string]interface{}
@@ -20,6 +22,7 @@ type Defaults struct {
 	//
 	hostsIsSet             bool
 	groupsIsSet            bool
+	inventoryIsSet         bool
 	becomeMethodIsSet      bool
 	becomeUserIsSet        bool
 	extraVarsIsSet         bool
@@ -40,10 +43,16 @@ const (
 	defaultsAttributeExtraVars         = "extra_vars"
 	defaultsAttributeExtraVarsJSON     = "extra_vars_json"
 	defaultsAttributeForks             = "forks"
+	defaultsAttributeInventory     = "inventory"
 	defaultsAttributeInventoryFile     = "inventory_file"
 	defaultsAttributeLimit             = "limit"
 	defaultsAttributeVaultID           = "vault_id"
 	defaultsAttributeVaultPasswordFile = "vault_password_file"
+	defaultsAttributeHostsAlias		   = "alias"
+	defaultsAttributeHostsHost         = "ansible_host"
+	defaultsAttributeHostsVariables    = "variables"
+	defaultsAttributeHostsVariablesJSON = "variables_json"
+
 )
 
 // NewDefaultsSchema returns a new defaults schema.
@@ -62,6 +71,26 @@ func NewDefaultsSchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Optional: true,
+				},
+				defaultsAttributeInventory: &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems:    1,
+					Elem:     &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							inventoryAttributeHosts: inventoryHostSchema(),
+							inventoryAttributeGroups: inventoryGroupSchema(),
+							inventoryAttributeVariables: &schema.Schema{
+								Type:     schema.TypeMap,
+								Optional: true,
+							},
+							inventoryAttributeVariablesJSON: &schema.Schema{
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+					ConflictsWith: []string{"plays.hosts", "plays.groups"},
 				},
 				defaultsAttributeBecomeMethod: &schema.Schema{
 					Type:         schema.TypeString,
@@ -133,7 +162,11 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) (*Default
 			v.groupsIsSet = len(v.groups) > 0
 		}
 		if val, ok := vals[defaultsAttributeInventory]; ok {
-			v.inventory = listOfInterfaceToInventoryRoot(val.([]interface{}))
+			inventory, err := listOfInterfaceToInventoryRoot(val.([]interface{}), "defaults")
+			if err != nil {
+				return nil, err
+			}
+			v.inventory = inventory
 			v.inventoryIsSet = len(v.inventory.Hosts) > 0
 		}
 		if val, ok := vals[defaultsAttributeBecomeMethod]; ok {
@@ -173,12 +206,13 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) (*Default
 			v.vaultPasswordFileIsSet = v.vaultPasswordFile != ""
 		}
 	}
-	return v
+	return v, nil
 }
 
 // Hosts returns default hosts.
-func (v *Defaults) Hosts() []string {
-	return v.hosts
+func (v *Defaults) Hosts() []InventoryHost {
+	//return v.hosts
+	return nil
 }
 
 // BecomeMethod returns become method.

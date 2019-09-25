@@ -64,8 +64,8 @@ fi
 `
 
 type inventoryTemplateRemoteData struct {
-	Hosts  []string
-	Groups []string
+	Hosts  []types.InventoryHost
+	Groups []types.InventoryGroup
 }
 
 const inventoryTemplateRemote = `{{$top := . -}}
@@ -449,8 +449,8 @@ func (v *RemoteMode) writeInventory(destination string, play *types.Play) (strin
 	}
 
 	templateData := inventoryTemplateRemoteData{
-		Hosts:  ensureLocalhostInHosts(play.Hosts()),
-		Groups: play.Groups(),
+		Hosts:  ensureLocalhostInHosts(play.Inventory()),
+		Groups: play.Inventory().Groups,
 	}
 
 	v.o.Output("Generating temporary ansible inventory...")
@@ -552,20 +552,25 @@ func (v *RemoteMode) copyOutput(r io.Reader, doneCh chan<- struct{}) {
 	}
 }
 
-func ensureLocalhostInHosts(hosts []string) []string {
+func ensureLocalhostInHosts(inventory types.InventoryRoot) []types.InventoryHost {
 	found := false
-	for _, host := range hosts {
-		if host == "localhost" {
+
+	for _, host := range inventory.Hosts {
+		if host.Alias == "localhost" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		newHosts := []string{"localhost"}
-		for _, host := range hosts {
+		var newHosts []types.InventoryHost
+		localHost := types.InventoryHost{
+			Alias: "localhost",
+		}
+		newHosts  = append(newHosts, localHost)
+		for _, host := range inventory.Hosts {
 			newHosts = append(newHosts, host)
 		}
 		return newHosts
 	}
-	return hosts
+	return inventory.Hosts
 }

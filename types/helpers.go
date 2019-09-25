@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fredwangwang/orderedmap"
 	"os"
 	"path/filepath"
 	"strings"
@@ -111,6 +112,136 @@ func listOfInterfaceToListOfString(v interface{}) []string {
 	}
 }
 
+func listOfInterfaceToListOfHosts(v interface{}) ([]InventoryHost, error)  {
+	var result = make([]InventoryHost, 0)
+	switch v := v.(type) {
+	case nil:
+		return nil, nil
+	case []interface{}:
+		for _, vv := range v {
+			hostMap := vv.(map[string]interface {})
+			host := InventoryHost{}
+			if value, found := hostMap[inventoryAttributeAlias]; found {
+				host.Alias =  value.(string);
+			}
+			if value, found := hostMap[inventoryAttributeAnsibleHost]; found {
+				host.AnsibleHost =  value.(string);
+			}
+			if value, found := hostMap[inventoryAttributeVariables]; found {
+				host.Variables = value.(map[string]interface {});
+			}
+			if value, found := hostMap[inventoryAttributeVariablesJSON]; found {
+				host.VariablesJSON = value.(string);
+			}
+			result = append(result, host)
+		}
+		return result, nil
+	default:
+		return result, fmt.Errorf("Unsupported type: %T", v)
+	}
+}
+
+func listOfStringToListOfHosts(v [] string) []InventoryHost {
+	var result = make([]InventoryHost, 0)
+	for _, vv := range v {
+		host := InventoryHost{}
+		host.Alias = vv
+		result = append(result, host)
+	}
+	return result
+}
+
+func listOfInterfaceToListOfGroups(v interface{}) ([]InventoryGroup, error) {
+	var result = make([]InventoryGroup, 0)
+	switch v := v.(type) {
+	case nil:
+		return nil, nil
+	case []interface{}:
+		for _, vv := range v {
+			groupMap := vv.(map[string]interface {})
+			group := InventoryGroup{}
+			if value, found := groupMap[inventoryAttributeName]; found {
+				group.Name =  value.(string)
+			}
+			if value, found := groupMap[inventoryAttributeHosts]; found {
+				hosts, err :=  listOfInterfaceToListOfHosts(value.([]interface{}))
+				if err != nil {
+					return result, err
+				}
+				group.Hosts = hosts
+			}
+			if value, found := groupMap[inventoryAttributeVariables]; found {
+				group.Variables = value.(map[string]interface {})
+			}
+			if value, found := groupMap[inventoryAttributeVariablesJSON]; found {
+				group.VariablesJSON = value.(string);
+			}
+			result = append(result, group)
+		}
+		return result, nil
+	default:
+		return result, fmt.Errorf("Unsupported type: %T", v)
+	}
+}
+
+func listOfStringToListOfGroups(v [] string, hosts []InventoryHost) ([]InventoryGroup, error)  {
+	var result = make([]InventoryGroup, 0)
+	for _, vv := range v {
+		group := InventoryGroup{}
+		group.Name = vv
+		group.Hosts = hosts
+		result = append(result, group)
+	}
+	return result, nil
+}
+
+func listOfInterfaceToInventoryRoot(v interface{}, key string) (InventoryRoot, error) {
+	var root = InventoryRoot{}
+	switch v := v.(type) {
+	case nil:
+		return root, nil
+
+	case []interface{}:
+		if len(v) > 0 {
+			inventoryMap := v[0].(map[string]interface{})
+			if value, found := inventoryMap[inventoryAttributeHosts]; found {
+				hosts, err := listOfInterfaceToListOfHosts(value.([]interface{}))
+				if err != nil {
+					return root, err
+				}
+				root.Hosts = hosts
+			}
+			if value, found := inventoryMap[inventoryAttributeGroups]; found {
+				groups, err :=listOfInterfaceToListOfGroups(value.([]interface{}))
+				if err != nil {
+					return root, err
+				}
+				root.Groups = groups
+			}
+			if value, found := inventoryMap[inventoryAttributeVariables]; found {
+				root.Variables =value.(map[string]interface{})
+			}
+			if value, found := inventoryMap[inventoryAttributeVariablesJSON]; found {
+				vars := value.(string)
+				if len(vars) > 0 {
+					if len(root.Variables) > 0 {
+						return root, fmt.Errorf("%s.inventory: invalid syntax: both variables and variables_json are set", key)
+					}
+
+					variables, err := variablesJSONToVariablesMap(vars)
+					if err != nil {
+						return root, fmt.Errorf("%s.inventory: %s", key, err)
+					}
+					root.Variables = variables
+				}
+			}
+		}
+		return root, nil
+	default:
+		return root, fmt.Errorf("Unsupported type: %T", v)
+	}
+}
+
 // ResolvePath checks if a path exists.
 func ResolvePath(path string) (string, error) {
 	expandedPath, _ := homedir.Expand(path)
@@ -150,4 +281,48 @@ func listOfStringToListOfMap(blocks []string, label string) (output []map[string
 		output = append(output, _map)
 	}
 	return output, errs
+}
+
+func variablesJSONToVariablesMap(varsJSON string) (InventoryVariables, error) {
+	var m InventoryVariables
+	if err := json.Unmarshal([]byte(varsJSON), &m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+
+func ListOfInventoryHostsToOrderedMap(hosts []InventoryHost) *orderedmap.OrderedMap {
+	result := orderedmap.New()
+	for _, host := range hosts {
+		vars := host.Variables
+		if host.AnsibleHost != "" {
+			vars["ansible_host"] = host.AnsibleHost
+		}
+		result.Set(host.Alias, host.Variables)
+	}
+	return result
+}
+
+func ListOfInventoryGroupsToMap(groups []InventoryGroup) InventoryJSONGroupList {
+	result := InventoryJSONGroupList{}
+	for _, group := range groups {
+		groupJSON := InventoryJSONGroup{}
+
+		if len(group.Hosts) > 0 {
+			groupJSON.Hosts = ListOfInventoryHostsToOrderedMap(group.Hosts)
+		}
+
+		if len(group.Variables) > 0 {
+			groupJSON.Vars = group.Variables
+		}
+
+		if len(group.Children) > 0 {
+			groupJSON.Children = ListOfInventoryGroupsToMap(group.Children)
+		}
+
+		result[group.Name] = groupJSON
+
+	}
+	return result
 }

@@ -17,6 +17,7 @@ type Play struct {
 	entity                    interface{}
 	hosts                     []string
 	groups                    []string
+	inventory                 InventoryRoot
 	become                    bool
 	becomeMethod              string
 	becomeUser                string
@@ -59,6 +60,7 @@ const (
 	playAttributeExtraVars         = "extra_vars"
 	playAttributeExtraVarsJSON     = "extra_vars_json"
 	playAttributeForks             = "forks"
+	playAttributeInventory         = "inventory"
 	playAttributeInventoryFile     = "inventory_file"
 	playAttributeLimit             = "limit"
 	playAttributeVaultID           = "vault_id"
@@ -85,11 +87,34 @@ func NewPlaySchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Optional: true,
+					ConflictsWith: []string{"plays.inventory"},
 				},
 				playAttributeGroups: &schema.Schema{
 					Type:     schema.TypeList,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Optional: true,
+					ConflictsWith: []string{"plays.inventory"},
+				},
+				playAttributeInventory: &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems:    1,
+					Elem:     &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							inventoryAttributeHosts: inventoryHostSchema(),
+							inventoryAttributeGroups: inventoryGroupSchema(),
+							inventoryAttributeVariables: &schema.Schema{
+								Type:     schema.TypeMap,
+								Optional: true,
+							},
+							inventoryAttributeVariablesJSON: &schema.Schema{
+								Type:     schema.TypeString,
+								Optional: true,
+								ConflictsWith: []string{"plays.inventory.variables"},
+							},
+						},
+					},
+					ConflictsWith: []string{"plays.hosts", "plays.groups"},
 				},
 				playAttributeBecome: &schema.Schema{
 					Type:     schema.TypeBool,
@@ -159,13 +184,13 @@ func NewPlaySchema() *schema.Schema {
 }
 
 // NewPlayFromInterface reads Play configuration from Terraform schema.
-func NewPlayFromInterface(i interface{}, defaults *Defaults) (*Play, error) {
+func NewPlayFromInterface(i interface{}, defaults *Defaults, key string) (*Play, error) {
 	vals := mapFromTypeSetList(i.(*schema.Set).List())
-	return NewPlayFromMapInterface(vals, defaults)
+	return NewPlayFromMapInterface(vals, defaults, key)
 }
 
 // NewPlayFromMapInterface reads Play configuration from a map.
-func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) (*Play, error) {
+func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, key string) (*Play, error) {
 	v := &Play{
 		defaults:          defaults,
 		enabled:           vals[playAttributeEnabled].(bool),
@@ -195,10 +220,20 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults) (*
 	if val, ok := vals[playAttributeHosts]; ok {
 		v.hosts = listOfInterfaceToListOfString(val.([]interface{}))
 	}
+	if val, ok := vals[playAttributeHosts]; ok {
+		v.hosts = listOfInterfaceToListOfString(val.([]interface{}))
+	}
 	if val, ok := vals[playAttributeGroups]; ok {
 		v.groups = listOfInterfaceToListOfString(val.([]interface{}))
 	}
-	return v
+	if val, ok := vals[playAttributeInventory]; ok {
+		inventory, err := listOfInterfaceToInventoryRoot(val.(interface{}), key)
+		if err != nil {
+			return nil, err
+		}
+		v.inventory = inventory
+	}
+	return v, nil
 }
 
 // Enabled controls the execution of a play.
@@ -212,26 +247,36 @@ func (v *Play) Entity() interface{} {
 	return v.entity
 }
 
-// Hosts to include in the auto-generated inventory file.
-func (v *Play) Hosts() []string {
-	if len(v.hosts) > 0 {
-		return v.hosts
+func (v *Play) Inventory() InventoryRoot {
+	if len(v.inventory.Hosts) > 0 {
+		return v.inventory
 	}
-	if v.defaults.hostsIsSet {
-		return v.defaults.hosts
-	}
-	return make([]string, 0)
-}
 
-// Groups to include in the auto-generated inventory file.
-func (v *Play) Groups() []string {
-	if len(v.groups) > 0 {
-		return v.groups
+	inventory := InventoryRoot{}
+	if len(v.hosts) > 0 {
+		inventory.Hosts = listOfStringToListOfHosts(v.hosts)
+		if len(v.groups) > 0 {
+			groups, err := listOfStringToListOfGroups(v.groups, inventory.Hosts)
+			if err != nil {}
+			inventory.Groups = groups
+		}
+		return inventory
 	}
-	if v.defaults.groupsIsSet {
-		return v.defaults.groups
+
+	if v.defaults.inventoryIsSet {
+		return v.defaults.inventory
 	}
-	return make([]string, 0)
+
+	if v.defaults.hostsIsSet {
+		inventory.Hosts = listOfStringToListOfHosts(v.defaults.hosts)
+		if v.defaults.groupsIsSet {
+			groups, err := listOfStringToListOfGroups(v.defaults.groups, inventory.Hosts)
+			if err != nil {}
+			inventory.Groups = groups
+		}
+		return inventory
+	}
+	return inventory
 }
 
 // Become represents Ansible --become flag.

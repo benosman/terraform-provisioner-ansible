@@ -1,12 +1,11 @@
 package mode
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/radekg/terraform-provisioner-ansible/types"
@@ -22,36 +21,6 @@ type LocalMode struct {
 	connInfo *connectionInfo
 }
 
-type inventoryTemplateLocalDataHost struct {
-	Alias       string
-	AnsibleHost string
-}
-
-type inventoryTemplateLocalData struct {
-	Hosts  []inventoryTemplateLocalDataHost
-	Groups []string
-}
-
-const inventoryTemplateLocal = `{{$top := . -}}
-{{range .Hosts -}}
-{{.Alias -}}
-{{if ne .AnsibleHost "" -}}
-{{" "}}ansible_host={{.AnsibleHost -}}
-{{end -}}
-{{printf "\n" -}}
-{{end}}
-
-{{range .Groups -}}
-[{{.}}]
-{{range $top.Hosts -}}
-{{.Alias -}}
-{{if ne .AnsibleHost "" -}}
-{{" "}}ansible_host={{.AnsibleHost -}}
-{{end -}}
-{{printf "\n" -}}
-{{end}}
-
-{{end}}`
 
 // NewLocalMode returns configured local mode provisioner.
 func NewLocalMode(o terraform.UIOutput, s *terraform.InstanceState) (*LocalMode, error) {
@@ -94,8 +63,8 @@ func (v *LocalMode) Run(plays []*types.Play, ansibleSSHSettings *types.AnsibleSS
 	compute_resource := v.ComputeResource()
 	if !compute_resource  {
 		for _, play := range plays {
-			if len(play.Hosts()) == 0 && play.InventoryFile() == "" {
-				return fmt.Errorf("Hosts or Inventory file must be specified on each plays attribute when using null_resource")
+			if len(play.Inventory().Hosts) == 0 && play.InventoryFile() == "" {
+				return fmt.Errorf("Hosts, Inventory or Inventory file must be specified on each plays attribute when using null_resource")
 			}
 		}	
 		// Force StrictHostKeyChecking=no for null_resource
@@ -248,7 +217,7 @@ func (v *LocalMode) Run(plays []*types.Play, ansibleSSHSettings *types.AnsibleSS
 
 		if inventoryFile != play.InventoryFile() {
 			play.SetOverrideInventoryFile(inventoryFile)
-			defer os.Remove(play.InventoryFile())
+			//defer os.Remove(play.InventoryFile())
 		}
 
 		// we can't pass bastion instance into this function
@@ -320,50 +289,53 @@ func (v *LocalMode) writePem(pk string) (string, error) {
 func (v *LocalMode) writeInventory(play *types.Play) (string, error) {
 	if play.InventoryFile() == "" {
 
+		inventory := play.Inventory()
 
-		playHosts := play.Hosts()
-
-		templateData := inventoryTemplateLocalData{
-			Hosts:  make([]inventoryTemplateLocalDataHost, 0),
-			Groups: play.Groups(),
-		}
+		playHosts := make([]types.InventoryHost, 0)
 
         // Compute resource path
 		if v.connInfo.Host != "" {
-			if len(playHosts) > 0 {
-				if playHosts[0] != "" {
-					templateData.Hosts = append(templateData.Hosts, inventoryTemplateLocalDataHost{
-						Alias:       playHosts[0],
+			if len(inventory.Hosts) > 0 {
+				if inventory.Hosts[0].Alias != "" {
+					playHosts = append(playHosts, types.InventoryHost{
+						Alias:       inventory.Hosts[0].Alias,
 						AnsibleHost: v.connInfo.Host,
 					})
 				} else {
-					templateData.Hosts = append(templateData.Hosts, inventoryTemplateLocalDataHost{
+					playHosts = append(playHosts, types.InventoryHost{
 						Alias: v.connInfo.Host,
 					})
 				}
 			} else {
-				templateData.Hosts = append(templateData.Hosts, inventoryTemplateLocalDataHost{
+				playHosts = append(playHosts, types.InventoryHost{
 					Alias: v.connInfo.Host,
 				})
-			}	
-		} else {
-			// Path for null resource, which does not use v.connInfo.Host
-			for _, host := range playHosts {
-				if host != "" {
-					templateData.Hosts = append(templateData.Hosts, inventoryTemplateLocalDataHost{
-							Alias: host,
-						})
-				}
 			}
+		} else {
+			playHosts = inventory.Hosts
+		}
 
+		root := types.InventoryJSONRoot{
+			All : types.InventoryJSONGroup{},
+		}
+
+		if len(playHosts) > 0 {
+			root.All.Hosts = types.ListOfInventoryHostsToOrderedMap(playHosts)
+		}
+
+		if len(inventory.Groups) > 0 {
+			root.All.Children = types.ListOfInventoryGroupsToMap(inventory.Groups)
+		}
+
+		if len(inventory.Variables) > 0 {
+			root.All.Vars = inventory.Variables
 		}
 
 		v.o.Output("Generating temporary ansible inventory...")
-		t := template.Must(template.New("hosts").Parse(inventoryTemplateLocal))
-		var buf bytes.Buffer
-		err := t.Execute(&buf, templateData)
+
+		output, err := json.MarshalIndent(root, "", "  ")
 		if err != nil {
-			return "", fmt.Errorf("Error executing 'hosts' template: %s", err)
+			return "", fmt.Errorf("Error creating 'inventory' json: %s", err)
 		}
 
 		file, err := ioutil.TempFile(os.TempDir(), "temporary-ansible-inventory")
@@ -373,7 +345,7 @@ func (v *LocalMode) writeInventory(play *types.Play) (string, error) {
 		}
 
 		v.o.Output(fmt.Sprintf("Writing temporary ansible inventory to '%s'...", file.Name()))
-		if err := ioutil.WriteFile(file.Name(), buf.Bytes(), 0644); err != nil {
+		if err := ioutil.WriteFile(file.Name(), output, 0644); err != nil {
 			return "", err
 		}
 
