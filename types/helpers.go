@@ -130,9 +130,6 @@ func listOfInterfaceToListOfHosts(v interface{}) ([]InventoryHost, error)  {
 			if value, found := hostMap[inventoryAttributeVariables]; found {
 				host.Variables = value.(map[string]interface {});
 			}
-			if value, found := hostMap[inventoryAttributeVariablesJSON]; found {
-				host.VariablesJSON = value.(string);
-			}
 			result = append(result, host)
 		}
 		return result, nil
@@ -172,9 +169,6 @@ func listOfInterfaceToListOfGroups(v interface{}) ([]InventoryGroup, error) {
 			}
 			if value, found := groupMap[inventoryAttributeVariables]; found {
 				group.Variables = value.(map[string]interface {})
-			}
-			if value, found := groupMap[inventoryAttributeVariablesJSON]; found {
-				group.VariablesJSON = value.(string);
 			}
 			result = append(result, group)
 		}

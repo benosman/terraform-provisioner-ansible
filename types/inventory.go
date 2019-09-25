@@ -8,7 +8,6 @@ type InventoryHost struct {
 	Alias         string
 	AnsibleHost   string
 	Variables     InventoryVariables
-	VariablesJSON string
 }
 
 type InventoryGroup struct {
@@ -16,14 +15,12 @@ type InventoryGroup struct {
 	Hosts         []InventoryHost
 	Children      []InventoryGroup
 	Variables     InventoryVariables
-	VariablesJSON string
 }
 
 type InventoryRoot struct {
 	Hosts         []InventoryHost
 	Groups        []InventoryGroup
 	Variables     InventoryVariables
-	VariablesJSON string
 }
 
 type InventoryJSONGroup struct {
