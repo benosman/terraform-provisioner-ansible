@@ -217,7 +217,7 @@ func (v *LocalMode) Run(plays []*types.Play, ansibleSSHSettings *types.AnsibleSS
 
 		if inventoryFile != play.InventoryFile() {
 			play.SetOverrideInventoryFile(inventoryFile)
-			//defer os.Remove(play.InventoryFile())
+			defer os.Remove(play.InventoryFile())
 		}
 
 		// we can't pass bastion instance into this function
