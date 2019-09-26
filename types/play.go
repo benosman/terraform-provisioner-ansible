@@ -212,8 +212,6 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, ke
 		}
 		v.extraVars = extraVars
 	}
-
-	//extraVars:         listOfMapFromTypeMap(vals[playAttributeExtraVars]),
 	if val, ok := vals[playAttributeHosts]; ok {
 		v.hosts = listOfInterfaceToListOfString(val.([]interface{}))
 	}
