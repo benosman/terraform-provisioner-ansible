@@ -23,8 +23,7 @@ type Play struct {
 	becomeUser                string
 	diff                      bool
 	check                     bool
-	extraVars                 []map[string]interface{}
-	extraVarsJSON             []string
+	extraVars                 []InventoryVariables
 	forks                     int
 	inventoryFile             string
 	limit                     string
@@ -58,7 +57,6 @@ const (
 	playAttributeDiff              = "diff"
 	playAttributeCheck             = "check"
 	playAttributeExtraVars         = "extra_vars"
-	playAttributeExtraVarsJSON     = "extra_vars_json"
 	playAttributeForks             = "forks"
 	playAttributeInventory         = "inventory"
 	playAttributeInventoryFile     = "inventory_file"
@@ -139,15 +137,7 @@ func NewPlaySchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				playAttributeExtraVars: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-				},
-				playAttributeExtraVarsJSON: &schema.Schema{
-					Type:     schema.TypeList,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Optional: true,
-				},
+				playAttributeExtraVars: extraVarsSchema(),
 				playAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -199,8 +189,6 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, ke
 		becomeUser:        vals[playAttributeBecomeUser].(string),
 		diff:              vals[playAttributeDiff].(bool),
 		check:             vals[playAttributeCheck].(bool),
-		extraVars:         listOfMapFromTypeMap(vals[playAttributeExtraVars]),
-		extraVarsJSON:	   listOfInterfaceToListOfString(vals[playAttributeExtraVarsJSON].([]interface{})),
 		forks:             vals[playAttributeForks].(int),
 		inventoryFile:     vals[playAttributeInventoryFile].(string),
 		limit:             vals[playAttributeLimit].(string),
@@ -217,6 +205,15 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, ke
 		v.entity = NewModuleFromInterface(vals[playAttributeModule])
 	}
 
+	if val, ok := vals[playAttributeExtraVars]; ok {
+		extraVars, err := listOfInterfaceToExtraVars(val.(interface{}), key)
+		if err != nil {
+			return nil, err
+		}
+		v.extraVars = extraVars
+	}
+
+	//extraVars:         listOfMapFromTypeMap(vals[playAttributeExtraVars]),
 	if val, ok := vals[playAttributeHosts]; ok {
 		v.hosts = listOfInterfaceToListOfString(val.([]interface{}))
 	}
@@ -317,29 +314,11 @@ func (v *Play) Check() bool {
 }
 
 // ExtraVars represents Ansible --extra-vars flags.
-func (v *Play) ExtraVars() ([]map[string]interface{}, error) {
-	allVars := make([]map[string]interface{}, 0)
-
-	if v.defaults.extraVarsJSONIsSet {
-		label := fmt.Sprintf("defaults.%s", defaultsAttributeExtraVarsJSON )
-		jsonVars, errs := listOfStringToListOfMap(v.defaults.extraVarsJSON, label)
-		if len(errs) > 0 {
-			return nil, errs[0]
-		}
-		allVars = append(v.extraVars, jsonVars...)
-	}
+func (v *Play) ExtraVars() ([]InventoryVariables, error) {
+	allVars := make([]InventoryVariables, 0)
 
 	if v.defaults.extraVarsIsSet {
 		allVars = append(allVars, v.defaults.extraVars...)
-	}
-
-	if len(v.extraVarsJSON) > 0 {
-		label := fmt.Sprintf("play.%s", playAttributeExtraVarsJSON )
-		jsonVars, errs := listOfStringToListOfMap(v.extraVarsJSON, label)
-		if len(errs) > 0 {
-			return nil, errs[0]
-		}
-		allVars = append(v.extraVars, jsonVars...)
 	}
 
 	if len(v.extraVars) > 0 {

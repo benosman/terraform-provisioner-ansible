@@ -3,16 +3,36 @@ package types
 import "github.com/hashicorp/terraform/helper/schema"
 
 const (
-	inventoryAttributeHosts 	    = "hosts"
-	inventoryAttributeGroups 	    = "groups"
-	inventoryAttributeName			= "name"
-	inventoryAttributeChildren 	    = "children"
-	inventoryAttributeAlias 	    = "alias"
+	extraVarsAttributeValues        = "values"
+	extraVarsAttributeJSON          = "json"
+	inventoryAttributeHosts         = "hosts"
+	inventoryAttributeGroups        = "groups"
+	inventoryAttributeName          = "name"
+	inventoryAttributeChildren      = "children"
+	inventoryAttributeAlias         = "alias"
 	inventoryAttributeAnsibleHost   = "ansible_host"
 	inventoryAttributeVariables     = "variables"
 	inventoryAttributeVariablesJSON = "variables_json"
 )
 
+func extraVarsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				extraVarsAttributeValues: &schema.Schema{
+					Type:     schema.TypeMap,
+					Optional: true,
+				},
+				extraVarsAttributeJSON: &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+	}
+}
 
 func inventoryHostSchema() *schema.Schema {
 	return &schema.Schema{

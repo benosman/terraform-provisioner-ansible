@@ -12,8 +12,7 @@ type Defaults struct {
 	inventory         InventoryRoot
 	becomeMethod      string
 	becomeUser        string
-	extraVars         []map[string]interface{}
-	extraVarsJSON	  []string
+	extraVars         []InventoryVariables
 	forks             int
 	inventoryFile     string
 	limit             string
@@ -26,7 +25,6 @@ type Defaults struct {
 	becomeMethodIsSet      bool
 	becomeUserIsSet        bool
 	extraVarsIsSet         bool
-	extraVarsJSONIsSet     bool
 	forksIsSet             bool
 	inventoryFileIsSet     bool
 	limitIsSet             bool
@@ -41,9 +39,8 @@ const (
 	defaultsAttributeBecomeMethod      = "become_method"
 	defaultsAttributeBecomeUser        = "become_user"
 	defaultsAttributeExtraVars         = "extra_vars"
-	defaultsAttributeExtraVarsJSON     = "extra_vars_json"
 	defaultsAttributeForks             = "forks"
-	defaultsAttributeInventory     = "inventory"
+	defaultsAttributeInventory         = "inventory"
 	defaultsAttributeInventoryFile     = "inventory_file"
 	defaultsAttributeLimit             = "limit"
 	defaultsAttributeVaultID           = "vault_id"
@@ -90,7 +87,7 @@ func NewDefaultsSchema() *schema.Schema {
 							},
 						},
 					},
-					ConflictsWith: []string{"plays.hosts", "plays.groups"},
+					ConflictsWith: []string{"defaults.hosts", "defaults.groups"},
 				},
 				defaultsAttributeBecomeMethod: &schema.Schema{
 					Type:         schema.TypeString,
@@ -101,15 +98,7 @@ func NewDefaultsSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				defaultsAttributeExtraVars: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-				},
-				defaultsAttributeExtraVarsJSON: &schema.Schema{
-					Type:     schema.TypeList,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Optional: true,
-				},
+				defaultsAttributeExtraVars: extraVarsSchema(),
 				defaultsAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -177,13 +166,13 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) (*Default
 			v.becomeUser = val.(string)
 			v.becomeUserIsSet = v.becomeUser != ""
 		}
-		if val, ok := vals[defaultsAttributeExtraVars]; ok && len(val.(map[string]interface{})) > 0 {
-			v.extraVars = append(v.extraVars, mapFromTypeMap(val))
+		if val, ok := vals[defaultsAttributeExtraVars]; ok && len(val.([]interface{})) > 0 {
+			extraVars, err := listOfInterfaceToExtraVars(val, "defaults")
+			if err != nil {
+				return nil, err
+			}
+			v.extraVars = extraVars
 			v.extraVarsIsSet = len(v.extraVars) > 0
-		}
-		if val, ok := vals[defaultsAttributeExtraVarsJSON]; ok && len(val.([]interface{})) > 0 {
-			v.extraVarsJSON = listOfInterfaceToListOfString(val.([]interface{}))
-			v.extraVarsJSONIsSet = len(v.extraVarsJSON) > 0
 		}
 		if val, ok := vals[defaultsAttributeForks]; ok {
 			v.forks = val.(int)

@@ -189,6 +189,44 @@ func listOfStringToListOfGroups(v [] string, hosts []InventoryHost) ([]Inventory
 	return result, nil
 }
 
+func listOfInterfaceToExtraVars(v interface{}, key string) ([]InventoryVariables, error) {
+	var result = make([]InventoryVariables, 0)
+	switch v := v.(type) {
+	case nil:
+		return result, nil
+
+	case []interface{}:
+		for index, vv := range v {
+
+			if item, ok := vv.(map[string]interface{}); ok {
+				vars := InventoryVariables{}
+
+				if value, found := item[extraVarsAttributeValues]; found {
+					vars = value.(map[string]interface {})
+				}
+				if value, found := item[extraVarsAttributeJSON]; found {
+					json := value.(string)
+					if len(json) > 0 {
+						if len(vars) > 0 {
+							return result, fmt.Errorf("%s.extra_vars[%d]: invalid syntax: both values and json attributes are set", key, index)
+						}
+						jsonVars, err := variablesJSONToVariablesMap(json)
+						if err != nil {
+							return result, fmt.Errorf("%s.extra_vars[%d]: %s", key, index, err)
+						}
+						vars = jsonVars
+					}
+				}
+				result = append(result, vars)
+			}
+		}
+		return result, nil
+	default:
+		return result, fmt.Errorf("Unsupported type: %T", v)
+	}
+}
+
+
 func listOfInterfaceToInventoryRoot(v interface{}, key string) (InventoryRoot, error) {
 	var root = InventoryRoot{}
 	switch v := v.(type) {
