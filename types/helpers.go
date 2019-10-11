@@ -24,6 +24,16 @@ var (
 	}
 )
 
+func MergeVariables(variables []InventoryVariables) InventoryVariables {
+	result := make(InventoryVariables)
+	for _, item := range variables {
+		for k, v := range item {
+			result[k] = v
+		}
+	}
+	return result
+}
+
 func vfBecomeMethod(val interface{}, key string) (warns []string, errs []error) {
 	v := val.(string)
 	if !becomeMethods[v] {
@@ -127,8 +137,12 @@ func listOfInterfaceToListOfHosts(v interface{}) ([]InventoryHost, error)  {
 			if value, found := hostMap[inventoryAttributeAnsibleHost]; found {
 				host.AnsibleHost =  value.(string);
 			}
-			if value, found := hostMap[inventoryAttributeVariables]; found {
-				host.Variables = value.(map[string]interface {});
+			if value, found := hostMap[inventoryAttributeVariables]; found  && len(value.([]interface{})) > 0{
+				vars, err := listOfInterfaceToVars(value, fmt.Sprintf("host.%s", host.Alias), inventoryAttributeVariables)
+				if err != nil {
+					return result, err
+				}
+				host.Variables = vars
 			}
 			result = append(result, host)
 		}
@@ -167,9 +181,14 @@ func listOfInterfaceToListOfGroups(v interface{}) ([]InventoryGroup, error) {
 				}
 				group.Hosts = hosts
 			}
-			if value, found := groupMap[inventoryAttributeVariables]; found {
-				group.Variables = value.(map[string]interface {})
+			if value, found := groupMap[inventoryAttributeVariables]; found  && len(value.([]interface{})) > 0{
+				vars, err := listOfInterfaceToVars(value, fmt.Sprintf("inventory.group.%s", group.Name), inventoryAttributeVariables)
+				if err != nil {
+					return result, err
+				}
+				group.Variables = vars
 			}
+
 			result = append(result, group)
 		}
 		return result, nil
@@ -189,7 +208,7 @@ func listOfStringToListOfGroups(v [] string, hosts []InventoryHost) ([]Inventory
 	return result, nil
 }
 
-func listOfInterfaceToExtraVars(v interface{}, key string) ([]InventoryVariables, error) {
+func listOfInterfaceToVars(v interface{}, parent string, key string) ([]InventoryVariables, error) {
 	var result = make([]InventoryVariables, 0)
 	switch v := v.(type) {
 	case nil:
@@ -201,18 +220,18 @@ func listOfInterfaceToExtraVars(v interface{}, key string) ([]InventoryVariables
 			if item, ok := vv.(map[string]interface{}); ok {
 				vars := InventoryVariables{}
 
-				if value, found := item[extraVarsAttributeValues]; found {
+				if value, found := item[varsAttributeValues]; found {
 					vars = value.(map[string]interface {})
 				}
-				if value, found := item[extraVarsAttributeJSON]; found {
-					json := value.(string)
-					if len(json) > 0 {
+				if value, found := item[varsAttributeJSON]; found {
+					jsonValue := value.(string)
+					if len(jsonValue) > 0 {
 						if len(vars) > 0 {
-							return result, fmt.Errorf("%s.extra_vars[%d]: invalid syntax: both values and json attributes are set", key, index)
+							return result, fmt.Errorf("%s.%s[%d]: invalid syntax: both values and json attributes are set", parent, key, index)
 						}
-						jsonVars, err := variablesJSONToVariablesMap(json)
+						jsonVars, err := variablesJSONToVariablesMap(jsonValue)
 						if err != nil {
-							return result, fmt.Errorf("%s.extra_vars[%d]: %s", key, index, err)
+							return result, fmt.Errorf("%s.%s[%d]: %s", parent, key, index, err)
 						}
 						vars = jsonVars
 					}
@@ -250,22 +269,12 @@ func listOfInterfaceToInventoryRoot(v interface{}, key string) (InventoryRoot, e
 				}
 				root.Groups = groups
 			}
-			if value, found := inventoryMap[inventoryAttributeVariables]; found {
-				root.Variables =value.(map[string]interface{})
-			}
-			if value, found := inventoryMap[inventoryAttributeVariablesJSON]; found {
-				vars := value.(string)
-				if len(vars) > 0 {
-					if len(root.Variables) > 0 {
-						return root, fmt.Errorf("%s.inventory: invalid syntax: both variables and variables_json are set", key)
-					}
-
-					variables, err := variablesJSONToVariablesMap(vars)
-					if err != nil {
-						return root, fmt.Errorf("%s.inventory: %s", key, err)
-					}
-					root.Variables = variables
+			if value, found := inventoryMap[inventoryAttributeVariables]; found  && len(value.([]interface{})) > 0{
+				vars, err := listOfInterfaceToVars(value, "inventory", inventoryAttributeVariables)
+				if err != nil {
+					return root, err
 				}
+				root.Variables = vars
 			}
 		}
 		return root, nil
@@ -327,11 +336,11 @@ func variablesJSONToVariablesMap(varsJSON string) (InventoryVariables, error) {
 func ListOfInventoryHostsToOrderedMap(hosts []InventoryHost) *orderedmap.OrderedMap {
 	result := orderedmap.New()
 	for _, host := range hosts {
-		vars := host.Variables
+		vars := MergeVariables(host.Variables)
 		if host.AnsibleHost != "" {
 			vars["ansible_host"] = host.AnsibleHost
 		}
-		result.Set(host.Alias, host.Variables)
+		result.Set(host.Alias, vars)
 	}
 	return result
 }
@@ -346,7 +355,7 @@ func ListOfInventoryGroupsToMap(groups []InventoryGroup) InventoryJSONGroupList 
 		}
 
 		if len(group.Variables) > 0 {
-			groupJSON.Vars = group.Variables
+			groupJSON.Vars = MergeVariables(group.Variables)
 		}
 
 		if len(group.Children) > 0 {

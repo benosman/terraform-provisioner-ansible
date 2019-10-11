@@ -99,17 +99,9 @@ func NewPlaySchema() *schema.Schema {
 					MaxItems:    1,
 					Elem:     &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							inventoryAttributeHost:  inventoryHostSchema(),
-							inventoryAttributeGroup: inventoryGroupSchema(),
-							inventoryAttributeVariables: &schema.Schema{
-								Type:     schema.TypeMap,
-								Optional: true,
-							},
-							inventoryAttributeVariablesJSON: &schema.Schema{
-								Type:     schema.TypeString,
-								Optional: true,
-								ConflictsWith: []string{"plays.inventory.variables"},
-							},
+							inventoryAttributeHost:      inventoryHostSchema(),
+							inventoryAttributeGroup:     inventoryGroupSchema(),
+							inventoryAttributeVariables: varsSchema(),
 						},
 					},
 					ConflictsWith: []string{"plays.hosts", "plays.groups"},
@@ -137,7 +129,7 @@ func NewPlaySchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				playAttributeExtraVars: extraVarsSchema(),
+				playAttributeExtraVars: varsSchema(),
 				playAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -206,7 +198,7 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, ke
 	}
 
 	if val, ok := vals[playAttributeExtraVars]; ok {
-		extraVars, err := listOfInterfaceToExtraVars(val.(interface{}), key)
+		extraVars, err := listOfInterfaceToVars(val.(interface{}), key, playAttributeExtraVars)
 		if err != nil {
 			return nil, err
 		}

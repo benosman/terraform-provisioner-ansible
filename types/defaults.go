@@ -77,14 +77,7 @@ func NewDefaultsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							inventoryAttributeHost:  inventoryHostSchema(),
 							inventoryAttributeGroup: inventoryGroupSchema(),
-							inventoryAttributeVariables: &schema.Schema{
-								Type:     schema.TypeMap,
-								Optional: true,
-							},
-							inventoryAttributeVariablesJSON: &schema.Schema{
-								Type:     schema.TypeString,
-								Optional: true,
-							},
+							inventoryAttributeVariables: varsSchema(),
 						},
 					},
 					ConflictsWith: []string{"defaults.hosts", "defaults.groups"},
@@ -98,7 +91,7 @@ func NewDefaultsSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				defaultsAttributeExtraVars: extraVarsSchema(),
+				defaultsAttributeExtraVars: varsSchema(),
 				defaultsAttributeForks: &schema.Schema{
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -167,7 +160,7 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) (*Default
 			v.becomeUserIsSet = v.becomeUser != ""
 		}
 		if val, ok := vals[defaultsAttributeExtraVars]; ok && len(val.([]interface{})) > 0 {
-			extraVars, err := listOfInterfaceToExtraVars(val, "defaults")
+			extraVars, err := listOfInterfaceToVars(val, "defaults", defaultsAttributeExtraVars)
 			if err != nil {
 				return nil, err
 			}

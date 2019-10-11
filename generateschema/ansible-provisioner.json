@@ -168,16 +168,26 @@
                               "Elem": {}
                             },
                             "variables": {
-                              "Type": "TypeMap",
+                              "Type": "TypeList",
                               "Optional": true,
                               "Default": {},
-                              "Elem": {}
-                            },
-                            "variables_json": {
-                              "Type": "TypeString",
-                              "Optional": true,
-                              "Default": {},
-                              "Elem": {}
+                              "Elem": {
+                                "Type": "SchemaInfo",
+                                "Info": {
+                                  "json": {
+                                    "Type": "TypeString",
+                                    "Optional": true,
+                                    "Default": {},
+                                    "Elem": {}
+                                  },
+                                  "values": {
+                                    "Type": "TypeMap",
+                                    "Optional": true,
+                                    "Default": {},
+                                    "Elem": {}
+                                  }
+                                }
+                              }
                             }
                           }
                         }
@@ -189,16 +199,26 @@
                         "Elem": {}
                       },
                       "variables": {
-                        "Type": "TypeMap",
+                        "Type": "TypeList",
                         "Optional": true,
                         "Default": {},
-                        "Elem": {}
-                      },
-                      "variables_json": {
-                        "Type": "TypeString",
-                        "Optional": true,
-                        "Default": {},
-                        "Elem": {}
+                        "Elem": {
+                          "Type": "SchemaInfo",
+                          "Info": {
+                            "json": {
+                              "Type": "TypeString",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            },
+                            "values": {
+                              "Type": "TypeMap",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -223,31 +243,51 @@
                         "Elem": {}
                       },
                       "variables": {
-                        "Type": "TypeMap",
+                        "Type": "TypeList",
+                        "Optional": true,
+                        "Default": {},
+                        "Elem": {
+                          "Type": "SchemaInfo",
+                          "Info": {
+                            "json": {
+                              "Type": "TypeString",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            },
+                            "values": {
+                              "Type": "TypeMap",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "variables": {
+                  "Type": "TypeList",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {
+                    "Type": "SchemaInfo",
+                    "Info": {
+                      "json": {
+                        "Type": "TypeString",
                         "Optional": true,
                         "Default": {},
                         "Elem": {}
                       },
-                      "variables_json": {
-                        "Type": "TypeString",
+                      "values": {
+                        "Type": "TypeMap",
                         "Optional": true,
                         "Default": {},
                         "Elem": {}
                       }
                     }
                   }
-                },
-                "variables": {
-                  "Type": "TypeMap",
-                  "Optional": true,
-                  "Default": {},
-                  "Elem": {}
-                },
-                "variables_json": {
-                  "Type": "TypeString",
-                  "Optional": true,
-                  "Default": {},
-                  "Elem": {}
                 }
               }
             }
@@ -423,16 +463,26 @@
                               "Elem": {}
                             },
                             "variables": {
-                              "Type": "TypeMap",
+                              "Type": "TypeList",
                               "Optional": true,
                               "Default": {},
-                              "Elem": {}
-                            },
-                            "variables_json": {
-                              "Type": "TypeString",
-                              "Optional": true,
-                              "Default": {},
-                              "Elem": {}
+                              "Elem": {
+                                "Type": "SchemaInfo",
+                                "Info": {
+                                  "json": {
+                                    "Type": "TypeString",
+                                    "Optional": true,
+                                    "Default": {},
+                                    "Elem": {}
+                                  },
+                                  "values": {
+                                    "Type": "TypeMap",
+                                    "Optional": true,
+                                    "Default": {},
+                                    "Elem": {}
+                                  }
+                                }
+                              }
                             }
                           }
                         }
@@ -444,16 +494,26 @@
                         "Elem": {}
                       },
                       "variables": {
-                        "Type": "TypeMap",
+                        "Type": "TypeList",
                         "Optional": true,
                         "Default": {},
-                        "Elem": {}
-                      },
-                      "variables_json": {
-                        "Type": "TypeString",
-                        "Optional": true,
-                        "Default": {},
-                        "Elem": {}
+                        "Elem": {
+                          "Type": "SchemaInfo",
+                          "Info": {
+                            "json": {
+                              "Type": "TypeString",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            },
+                            "values": {
+                              "Type": "TypeMap",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -478,34 +538,51 @@
                         "Elem": {}
                       },
                       "variables": {
-                        "Type": "TypeMap",
+                        "Type": "TypeList",
+                        "Optional": true,
+                        "Default": {},
+                        "Elem": {
+                          "Type": "SchemaInfo",
+                          "Info": {
+                            "json": {
+                              "Type": "TypeString",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            },
+                            "values": {
+                              "Type": "TypeMap",
+                              "Optional": true,
+                              "Default": {},
+                              "Elem": {}
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "variables": {
+                  "Type": "TypeList",
+                  "Optional": true,
+                  "Default": {},
+                  "Elem": {
+                    "Type": "SchemaInfo",
+                    "Info": {
+                      "json": {
+                        "Type": "TypeString",
                         "Optional": true,
                         "Default": {},
                         "Elem": {}
                       },
-                      "variables_json": {
-                        "Type": "TypeString",
+                      "values": {
+                        "Type": "TypeMap",
                         "Optional": true,
                         "Default": {},
                         "Elem": {}
                       }
                     }
                   }
-                },
-                "variables": {
-                  "Type": "TypeMap",
-                  "Optional": true,
-                  "Default": {},
-                  "Elem": {}
-                },
-                "variables_json": {
-                  "Type": "TypeString",
-                  "Optional": true,
-                  "ConflictsWith": [
-                    "plays.inventory.variables"
-                  ],
-                  "Default": {},
-                  "Elem": {}
                 }
               }
             }

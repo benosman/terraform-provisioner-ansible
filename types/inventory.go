@@ -7,20 +7,20 @@ type InventoryVariables map[string]interface{}
 type InventoryHost struct {
 	Alias         string
 	AnsibleHost   string
-	Variables     InventoryVariables
+	Variables     []InventoryVariables
 }
 
 type InventoryGroup struct {
 	Name          string
 	Hosts         []InventoryHost
 	Children      []InventoryGroup
-	Variables     InventoryVariables
+	Variables     []InventoryVariables
 }
 
 type InventoryRoot struct {
 	Hosts         []InventoryHost
 	Groups        []InventoryGroup
-	Variables     InventoryVariables
+	Variables     []InventoryVariables
 }
 
 type InventoryJSONGroup struct {

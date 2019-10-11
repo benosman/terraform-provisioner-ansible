@@ -3,29 +3,28 @@ package types
 import "github.com/hashicorp/terraform/helper/schema"
 
 const (
-	extraVarsAttributeValues        = "values"
-	extraVarsAttributeJSON          = "json"
-	inventoryAttributeHost          = "host"
-	inventoryAttributeGroup         = "group"
-	inventoryAttributeName          = "name"
-	inventoryAttributeChildren      = "children"
-	inventoryAttributeAlias         = "alias"
-	inventoryAttributeAnsibleHost   = "ansible_host"
-	inventoryAttributeVariables     = "variables"
-	inventoryAttributeVariablesJSON = "variables_json"
+	varsAttributeValues           = "values"
+	varsAttributeJSON             = "json"
+	inventoryAttributeHost        = "host"
+	inventoryAttributeGroup       = "group"
+	inventoryAttributeName        = "name"
+	inventoryAttributeChildren    = "children"
+	inventoryAttributeAlias       = "alias"
+	inventoryAttributeAnsibleHost = "ansible_host"
+	inventoryAttributeVariables   = "variables"
 )
 
-func extraVarsSchema() *schema.Schema {
+func varsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				extraVarsAttributeValues: &schema.Schema{
+				varsAttributeValues: &schema.Schema{
 					Type:     schema.TypeMap,
 					Optional: true,
 				},
-				extraVarsAttributeJSON: &schema.Schema{
+				varsAttributeJSON: &schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -48,14 +47,7 @@ func inventoryHostSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				inventoryAttributeVariables: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-				},
-				inventoryAttributeVariablesJSON: &schema.Schema{
-					Type:     schema.TypeString,
-					Optional: true,
-				},
+				inventoryAttributeVariables: varsSchema(),
 			},
 		},
 	}
@@ -72,14 +64,7 @@ func inventoryGroupSchema() *schema.Schema {
 					Required: true,
 				},
 				inventoryAttributeHost: inventoryHostSchema(),
-				inventoryAttributeVariables: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-				},
-				inventoryAttributeVariablesJSON: &schema.Schema{
-					Type:     schema.TypeString,
-					Optional: true,
-				},
+				inventoryAttributeVariables: varsSchema(),
 			},
 		},
 	}

@@ -328,7 +328,7 @@ func (v *LocalMode) writeInventory(play *types.Play) (string, error) {
 		}
 
 		if len(inventory.Variables) > 0 {
-			root.All.Vars = inventory.Variables
+			root.All.Vars = types.MergeVariables(inventory.Variables)
 		}
 
 		v.o.Output("Generating temporary ansible inventory...")
