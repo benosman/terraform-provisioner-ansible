@@ -141,14 +141,14 @@
             "Elem": {
               "Type": "SchemaInfo",
               "Info": {
-                "groups": {
+                "group": {
                   "Type": "TypeList",
                   "Optional": true,
                   "Default": {},
                   "Elem": {
                     "Type": "SchemaInfo",
                     "Info": {
-                      "hosts": {
+                      "host": {
                         "Type": "TypeList",
                         "Required": true,
                         "Default": {},
@@ -203,7 +203,7 @@
                     }
                   }
                 },
-                "hosts": {
+                "host": {
                   "Type": "TypeList",
                   "Required": true,
                   "Default": {},
@@ -396,14 +396,14 @@
             "Elem": {
               "Type": "SchemaInfo",
               "Info": {
-                "groups": {
+                "group": {
                   "Type": "TypeList",
                   "Optional": true,
                   "Default": {},
                   "Elem": {
                     "Type": "SchemaInfo",
                     "Info": {
-                      "hosts": {
+                      "host": {
                         "Type": "TypeList",
                         "Required": true,
                         "Default": {},
@@ -458,7 +458,7 @@
                     }
                   }
                 },
-                "hosts": {
+                "host": {
                   "Type": "TypeList",
                   "Required": true,
                   "Default": {},

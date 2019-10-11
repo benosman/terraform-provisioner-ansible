@@ -5,8 +5,8 @@ import "github.com/hashicorp/terraform/helper/schema"
 const (
 	extraVarsAttributeValues        = "values"
 	extraVarsAttributeJSON          = "json"
-	inventoryAttributeHosts         = "hosts"
-	inventoryAttributeGroups        = "groups"
+	inventoryAttributeHost          = "host"
+	inventoryAttributeGroup         = "group"
 	inventoryAttributeName          = "name"
 	inventoryAttributeChildren      = "children"
 	inventoryAttributeAlias         = "alias"
@@ -71,7 +71,7 @@ func inventoryGroupSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				inventoryAttributeHosts: inventoryHostSchema(),
+				inventoryAttributeHost: inventoryHostSchema(),
 				inventoryAttributeVariables: &schema.Schema{
 					Type:     schema.TypeMap,
 					Optional: true,

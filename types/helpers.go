@@ -160,7 +160,7 @@ func listOfInterfaceToListOfGroups(v interface{}) ([]InventoryGroup, error) {
 			if value, found := groupMap[inventoryAttributeName]; found {
 				group.Name =  value.(string)
 			}
-			if value, found := groupMap[inventoryAttributeHosts]; found {
+			if value, found := groupMap[inventoryAttributeHost]; found {
 				hosts, err :=  listOfInterfaceToListOfHosts(value.([]interface{}))
 				if err != nil {
 					return result, err
@@ -236,14 +236,14 @@ func listOfInterfaceToInventoryRoot(v interface{}, key string) (InventoryRoot, e
 	case []interface{}:
 		if len(v) > 0 {
 			inventoryMap := v[0].(map[string]interface{})
-			if value, found := inventoryMap[inventoryAttributeHosts]; found {
+			if value, found := inventoryMap[inventoryAttributeHost]; found {
 				hosts, err := listOfInterfaceToListOfHosts(value.([]interface{}))
 				if err != nil {
 					return root, err
 				}
 				root.Hosts = hosts
 			}
-			if value, found := inventoryMap[inventoryAttributeGroups]; found {
+			if value, found := inventoryMap[inventoryAttributeGroup]; found {
 				groups, err :=listOfInterfaceToListOfGroups(value.([]interface{}))
 				if err != nil {
 					return root, err

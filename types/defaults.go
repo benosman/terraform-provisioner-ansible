@@ -75,8 +75,8 @@ func NewDefaultsSchema() *schema.Schema {
 					MaxItems:    1,
 					Elem:     &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							inventoryAttributeHosts: inventoryHostSchema(),
-							inventoryAttributeGroups: inventoryGroupSchema(),
+							inventoryAttributeHost:  inventoryHostSchema(),
+							inventoryAttributeGroup: inventoryGroupSchema(),
 							inventoryAttributeVariables: &schema.Schema{
 								Type:     schema.TypeMap,
 								Optional: true,
