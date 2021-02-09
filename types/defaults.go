@@ -10,6 +10,7 @@ type Defaults struct {
 	hosts             []string
 	groups            []string
 	inventory         InventoryRoot
+	configPath        string
 	becomeMethod      string
 	becomeUser        string
 	extraVars         []InventoryVariables
@@ -22,6 +23,7 @@ type Defaults struct {
 	hostsIsSet             bool
 	groupsIsSet            bool
 	inventoryIsSet         bool
+	configPathIsSet        bool
 	becomeMethodIsSet      bool
 	becomeUserIsSet        bool
 	extraVarsIsSet         bool
@@ -34,20 +36,21 @@ type Defaults struct {
 
 const (
 	// attribute names:
-	defaultsAttributeHosts             = "hosts"
-	defaultsAttributeGroups            = "groups"
-	defaultsAttributeBecomeMethod      = "become_method"
-	defaultsAttributeBecomeUser        = "become_user"
-	defaultsAttributeExtraVars         = "extra_vars"
-	defaultsAttributeForks             = "forks"
-	defaultsAttributeInventory         = "inventory"
-	defaultsAttributeInventoryFile     = "inventory_file"
-	defaultsAttributeLimit             = "limit"
-	defaultsAttributeVaultID           = "vault_id"
-	defaultsAttributeVaultPasswordFile = "vault_password_file"
-	defaultsAttributeHostsAlias		   = "alias"
-	defaultsAttributeHostsHost         = "ansible_host"
-	defaultsAttributeHostsVariables    = "variables"
+	defaultsAttributeHosts              = "hosts"
+	defaultsAttributeGroups             = "groups"
+	defaultsAttributeConfigPath         = "config_path"
+	defaultsAttributeBecomeMethod       = "become_method"
+	defaultsAttributeBecomeUser         = "become_user"
+	defaultsAttributeExtraVars          = "extra_vars"
+	defaultsAttributeForks              = "forks"
+	defaultsAttributeInventory          = "inventory"
+	defaultsAttributeInventoryFile      = "inventory_file"
+	defaultsAttributeLimit              = "limit"
+	defaultsAttributeVaultID            = "vault_id"
+	defaultsAttributeVaultPasswordFile  = "vault_password_file"
+	defaultsAttributeHostsAlias         = "alias"
+	defaultsAttributeHostsHost          = "ansible_host"
+	defaultsAttributeHostsVariables     = "variables"
 	defaultsAttributeHostsVariablesJSON = "variables_json"
 
 )
@@ -72,15 +75,19 @@ func NewDefaultsSchema() *schema.Schema {
 				defaultsAttributeInventory: &schema.Schema{
 					Type:     schema.TypeList,
 					Optional: true,
-					MaxItems:    1,
-					Elem:     &schema.Resource{
+					MaxItems: 1,
+					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							inventoryAttributeHost:  inventoryHostSchema(),
-							inventoryAttributeGroup: inventoryGroupSchema(),
+							inventoryAttributeHost:      inventoryHostSchema(),
+							inventoryAttributeGroup:     inventoryGroupSchema(),
 							inventoryAttributeVariables: varsSchema(),
 						},
 					},
 					ConflictsWith: []string{"defaults.hosts", "defaults.groups"},
+				},
+				defaultsAttributeConfigPath: &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 				defaultsAttributeBecomeMethod: &schema.Schema{
 					Type:         schema.TypeString,
@@ -150,6 +157,10 @@ func NewDefaultsFromMapInterface(vals map[string]interface{}, ok bool) (*Default
 			}
 			v.inventory = inventory
 			v.inventoryIsSet = len(v.inventory.Hosts) > 0
+		}
+		if val, ok := vals[defaultsAttributeConfigPath]; ok {
+			v.configPath = val.(string)
+			v.configPathIsSet = v.configPath != ""
 		}
 		if val, ok := vals[defaultsAttributeBecomeMethod]; ok {
 			v.becomeMethod = val.(string)

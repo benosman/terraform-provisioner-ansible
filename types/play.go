@@ -18,6 +18,7 @@ type Play struct {
 	hosts                     []string
 	groups                    []string
 	inventory                 InventoryRoot
+	configPath                string
 	become                    bool
 	becomeMethod              string
 	becomeUser                string
@@ -42,6 +43,7 @@ const (
 	playDefaultForks        = 5
 	// environment variable names:
 	ansibleEnvVarForceColor       = "ANSIBLE_FORCE_COLOR"
+	ansibleEnvVarConfig           = "ANSIBLE_CONFIG"
 	ansibleEnvVarRolesPath        = "ANSIBLE_ROLES_PATH"
 	ansibleEnvVarDefaultRolesPath = "DEFAULT_ROLES_PATH"
 	ansibleEnvVarRemoteTmp        = "ANSIBLE_REMOTE_TMP"
@@ -51,6 +53,7 @@ const (
 	playAttributeModule            = "module"
 	playAttributeHosts             = "hosts"
 	playAttributeGroups            = "groups"
+	playAttributeConfigPath        = "config_path"
 	playAttributeBecome            = "become"
 	playAttributeBecomeMethod      = "become_method"
 	playAttributeBecomeUser        = "become_user"
@@ -96,8 +99,8 @@ func NewPlaySchema() *schema.Schema {
 				playAttributeInventory: &schema.Schema{
 					Type:     schema.TypeList,
 					Optional: true,
-					MaxItems:    1,
-					Elem:     &schema.Resource{
+					MaxItems: 1,
+					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							inventoryAttributeHost:      inventoryHostSchema(),
 							inventoryAttributeGroup:     inventoryGroupSchema(),
@@ -105,6 +108,10 @@ func NewPlaySchema() *schema.Schema {
 						},
 					},
 					ConflictsWith: []string{"plays.hosts", "plays.groups"},
+				},
+				playAttributeConfigPath: &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 				playAttributeBecome: &schema.Schema{
 					Type:     schema.TypeBool,
@@ -176,6 +183,7 @@ func NewPlayFromMapInterface(vals map[string]interface{}, defaults *Defaults, ke
 	v := &Play{
 		defaults:          defaults,
 		enabled:           vals[playAttributeEnabled].(bool),
+		configPath:        vals[playAttributeConfigPath].(string),
 		become:            vals[playAttributeBecome].(bool),
 		becomeMethod:      vals[playAttributeBecomeMethod].(string),
 		becomeUser:        vals[playAttributeBecomeUser].(string),
@@ -258,12 +266,24 @@ func (v *Play) Inventory() InventoryRoot {
 		inventory.Hosts = listOfStringToListOfHosts(v.defaults.hosts)
 		if v.defaults.groupsIsSet {
 			groups, err := listOfStringToListOfGroups(v.defaults.groups, inventory.Hosts)
-			if err != nil {}
+			if err != nil {
+			}
 			inventory.Groups = groups
 		}
 		return inventory
 	}
 	return inventory
+}
+
+// ConfigPath represents Ansible ANSIBLE_CONFIG environment variable.
+func (v *Play) ConfigPath() string {
+	if v.configPath != "" {
+		return v.configPath
+	}
+	if v.defaults.configPathIsSet {
+		return v.defaults.configPath
+	}
+	return ""
 }
 
 // Become represents Ansible --become flag.
@@ -425,6 +445,10 @@ func (v *Play) ToCommand(ansibleArgs LocalModeAnsibleArgs) (string, error) {
 
 	if envVarVal, ok := os.LookupEnv(ansibleEnvVarRemoteTmp); ok {
 		command = fmt.Sprintf("%s %s=\"%s\"", command, ansibleEnvVarRemoteTmp, envVarVal)
+	}
+
+	if len(v.ConfigPath()) > 0 {
+		command = fmt.Sprintf("%s=\"%s\" %s", ansibleEnvVarConfig, v.ConfigPath(), command)
 	}
 
 	// entity to call:
